@@ -138,8 +138,9 @@ const Index = () => {
 
       <div className="mt-6">
         <Card className="bg-white">
-          <CardHeader>
-            <div className="flex items-center justify-between">
+          <Tabs defaultValue="all">
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <CardTitle>Firmware Versions</CardTitle>
                 <TabsList>
                   <TabsTrigger value="all">All</TabsTrigger>
@@ -151,7 +152,6 @@ const Index = () => {
                 Overview of all firmware versions and their burn statistics
               </CardDescription>
             </CardHeader>
-          <Tabs defaultValue="all">
             <CardContent>
               <TabsContent value="all" className="space-y-4">
                 <div className="rounded-md border">
@@ -257,8 +257,8 @@ const Index = () => {
               </TabsContent>
             </CardContent>
           </Tabs>
-          </Card>
-        </div>
+        </Card>
+      </div>
     </MainLayout>
   );
 };
