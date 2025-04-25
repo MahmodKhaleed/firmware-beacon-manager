@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      firmware: {
+        Row: {
+          burn_count: number | null
+          content: string | null
+          date_uploaded: string | null
+          description: string | null
+          id: string
+          name: string
+          size: number
+          status: Database["public"]["Enums"]["firmware_status"]
+          tags: string[] | null
+          version: string
+        }
+        Insert: {
+          burn_count?: number | null
+          content?: string | null
+          date_uploaded?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          size: number
+          status?: Database["public"]["Enums"]["firmware_status"]
+          tags?: string[] | null
+          version: string
+        }
+        Update: {
+          burn_count?: number | null
+          content?: string | null
+          date_uploaded?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          size?: number
+          status?: Database["public"]["Enums"]["firmware_status"]
+          tags?: string[] | null
+          version?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -44,7 +83,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      firmware_status: "stable" | "beta" | "draft"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -159,6 +198,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      firmware_status: ["stable", "beta", "draft"],
+    },
   },
 } as const

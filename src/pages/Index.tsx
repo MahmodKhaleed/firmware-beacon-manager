@@ -1,29 +1,48 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockFirmwareData } from "@/data/mockFirmware";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Download, Upload, MonitorSmartphone } from "lucide-react";
 import { Link } from "react-router-dom";
-
-// Prepare data for the chart
-const burnDataByDate = mockFirmwareData.reduce((acc: any, curr) => {
-  const date = curr.dateUploaded.toISOString().split('T')[0];
-  if (!acc[date]) {
-    acc[date] = { date, totalBurns: 0 };
-  }
-  acc[date].totalBurns += curr.burnCount;
-  return acc;
-}, {});
-
-const chartData = Object.values(burnDataByDate);
-
-const latestVersions = [...mockFirmwareData]
-  .sort((a, b) => b.dateUploaded.getTime() - a.dateUploaded.getTime())
-  .slice(0, 3);
+import { useFirmware } from "@/hooks/useFirmware";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
+  const { data: firmwareData, isLoading, error } = useFirmware();
+  const { toast } = useToast();
+
+  if (error) {
+    toast({
+      title: "Error loading firmware data",
+      description: "Please try again later",
+      variant: "destructive",
+    });
+  }
+
+  // Prepare data for the chart
+  const burnDataByDate = firmwareData?.reduce((acc: any, curr) => {
+    const date = curr.dateUploaded.toISOString().split('T')[0];
+    if (!acc[date]) {
+      acc[date] = { date, totalBurns: 0 };
+    }
+    acc[date].totalBurns += curr.burn_count;
+    return acc;
+  }, {}) ?? {};
+
+  const chartData = Object.values(burnDataByDate);
+
+  const latestVersions = firmwareData?.slice(0, 3) ?? [];
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-96">
+          <p className="text-muted-foreground">Loading firmware data...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -33,7 +52,7 @@ const Index = () => {
             <Upload className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockFirmwareData.length}</div>
+            <div className="text-2xl font-bold">{firmwareData?.length}</div>
             <p className="text-xs text-muted-foreground">
               Manage all versions in the Version History
             </p>
@@ -47,7 +66,7 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {mockFirmwareData.reduce((sum, fw) => sum + fw.burnCount, 0)}
+              {firmwareData?.reduce((sum, fw) => sum + fw.burn_count, 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               Across all firmware versions
@@ -62,12 +81,10 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {[...mockFirmwareData].sort((a, b) => 
-                b.dateUploaded.getTime() - a.dateUploaded.getTime())[0].version}
+              {firmwareData && firmwareData.length > 0 ? firmwareData[0].version : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
-              Uploaded {new Date([...mockFirmwareData].sort((a, b) => 
-                b.dateUploaded.getTime() - a.dateUploaded.getTime())[0].dateUploaded).toLocaleDateString()}
+              Uploaded {firmwareData && firmwareData.length > 0 ? new Date(firmwareData[0].dateUploaded).toLocaleDateString() : 'N/A'}
             </p>
           </CardContent>
         </Card>
@@ -108,7 +125,7 @@ const Index = () => {
                 <div key={fw.id} className="flex items-center justify-between border-b pb-3 last:border-0">
                   <div>
                     <p className="font-medium">{fw.name} {fw.version}</p>
-                    <p className="text-sm text-muted-foreground">{fw.description.slice(0, 40)}{fw.description.length > 40 ? '...' : ''}</p>
+                    <p className="text-sm text-muted-foreground">{fw.description?.slice(0, 40)}{fw.description?.length > 40 ? '...' : ''}</p>
                     <div className="mt-1 flex items-center">
                       <div className={`h-2 w-2 rounded-full mr-2 ${
                         fw.status === 'stable' ? 'bg-green-500' : 
@@ -119,7 +136,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium">{fw.burnCount} burns</p>
+                    <p className="text-sm font-medium">{fw.burn_count} burns</p>
                     <p className="text-xs text-muted-foreground">
                       {fw.dateUploaded.toLocaleDateString()}
                     </p>
@@ -162,7 +179,7 @@ const Index = () => {
                     <div>Date</div>
                     <div>Burns</div>
                   </div>
-                  {mockFirmwareData.map((firmware) => (
+                  {firmwareData?.map((firmware) => (
                     <div
                       key={firmware.id}
                       className="grid grid-cols-6 gap-4 p-3 text-sm items-center border-t"
@@ -184,7 +201,7 @@ const Index = () => {
                       </div>
                       <div>{(firmware.size / 1024).toFixed(1)} KB</div>
                       <div>{firmware.dateUploaded.toLocaleDateString()}</div>
-                      <div>{firmware.burnCount}</div>
+                      <div>{firmware.burn_count}</div>
                     </div>
                   ))}
                 </div>
@@ -199,8 +216,8 @@ const Index = () => {
                     <div>Date</div>
                     <div>Burns</div>
                   </div>
-                  {mockFirmwareData
-                    .filter(fw => fw.status === 'stable')
+                  {firmwareData
+                    ?.filter(fw => fw.status === 'stable')
                     .map((firmware) => (
                       <div
                         key={firmware.id}
@@ -217,7 +234,7 @@ const Index = () => {
                         </div>
                         <div>{(firmware.size / 1024).toFixed(1)} KB</div>
                         <div>{firmware.dateUploaded.toLocaleDateString()}</div>
-                        <div>{firmware.burnCount}</div>
+                        <div>{firmware.burn_count}</div>
                       </div>
                   ))}
                 </div>
@@ -232,8 +249,8 @@ const Index = () => {
                     <div>Date</div>
                     <div>Burns</div>
                   </div>
-                  {mockFirmwareData
-                    .filter(fw => fw.status === 'beta')
+                  {firmwareData
+                    ?.filter(fw => fw.status === 'beta')
                     .map((firmware) => (
                       <div
                         key={firmware.id}
@@ -250,7 +267,7 @@ const Index = () => {
                         </div>
                         <div>{(firmware.size / 1024).toFixed(1)} KB</div>
                         <div>{firmware.dateUploaded.toLocaleDateString()}</div>
-                        <div>{firmware.burnCount}</div>
+                        <div>{firmware.burn_count}</div>
                       </div>
                   ))}
                 </div>
