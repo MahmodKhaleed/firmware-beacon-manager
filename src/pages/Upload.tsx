@@ -10,10 +10,12 @@ import { useState } from "react";
 import { Upload as UploadIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { nanoid } from 'nanoid';
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Upload = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
@@ -28,14 +30,18 @@ const Upload = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.name.endsWith('.c') || file.name.endsWith('.h')) {
+      const validExtensions = ['.hex', '.exe', '.elf'];
+      const hasValidExtension = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+      
+      if (hasValidExtension) {
         setSelectedFile(file);
       } else {
         toast({
           title: "Invalid file type",
-          description: "Please select a valid C source (.c) or header (.h) file",
+          description: "Please select a valid firmware file (.hex, .exe, or .elf)",
           variant: "destructive",
         });
+        e.target.value = '';
       }
     }
   };
@@ -57,7 +63,7 @@ const Upload = () => {
     });
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedFile) {
@@ -80,13 +86,40 @@ const Upload = () => {
     
     setUploading(true);
     
-    // Simulate upload delay
-    setTimeout(() => {
+    try {
+      // Read file content
+      const fileContent = await selectedFile.text();
+      
+      // Insert firmware data into Supabase
+      const { error } = await supabase
+        .from('firmware')
+        .insert({
+          name: formData.name,
+          version: formData.version,
+          description: formData.description || null,
+          size: selectedFile.size,
+          status: formData.status,
+          tags: formData.tags,
+          content: fileContent,
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Firmware uploaded successfully",
         description: `${formData.name} v${formData.version} has been added to the repository`,
       });
       
+      // Navigate to versions page after successful upload
+      navigate('/versions');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading the firmware. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setUploading(false);
       setSelectedFile(null);
       setFormData({
@@ -96,9 +129,7 @@ const Upload = () => {
         status: "draft",
         tags: [],
       });
-      
-      // In a real application, you would save the file and metadata here
-    }, 2000);
+    }
   };
 
   return (
