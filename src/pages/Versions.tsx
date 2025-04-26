@@ -1,74 +1,23 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
-import { useFirmware } from "@/hooks/useFirmware";
 import { Button } from "@/components/ui/button";
 import { FirmwareSearch } from "@/components/firmware/FirmwareSearch";
-import { FirmwareListHeader } from "@/components/firmware/FirmwareListHeader";
-import { FirmwareItem } from "@/components/firmware/FirmwareItem";
+import { FirmwareList } from "@/components/firmware/FirmwareList";
+import { useFirmwareList } from "@/hooks/useFirmwareList";
 
 const Versions = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortField, setSortField] = useState("date");
-  const [sortDirection, setSortDirection] = useState("desc");
-  const { data: firmwareData, isLoading, error } = useFirmware();
-  
-  // Mock firmware content for the viewer
-  const mockFirmwareContent = `
-/* Device Controller Firmware v1.2.0
- * 
- * This firmware implements power management features for IoT devices.
- * Copyright (c) 2024 Firmware Beacon Inc.
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include "power_management.h"
-#include "device_config.h"
-
-#define VERSION "1.2.0-beta"
-#define BUILD_DATE "2024-04-10"
-#define MAX_POWER_LEVEL 100
-#define MIN_POWER_LEVEL 5
-
-// Global configuration
-static device_config_t g_device_config;
-static uint8_t g_power_level = DEFAULT_POWER_LEVEL;
-
-void initialize_system(void) {
-  // Initialize hardware
-  power_management_init();
-  
-  // Load device configuration
-  if (load_device_config(&g_device_config) != SUCCESS) {
-    // Use defaults if loading fails
-    set_default_configuration(&g_device_config);
-  }
-  
-  // Set up power management based on configuration
-  configure_power_management(g_device_config.power_mode, 
-                            g_device_config.sleep_timeout);
-                            
-  printf("Firmware v%s initialized\\n", VERSION);
-}
-
-int main(void) {
-  initialize_system();
-  
-  // Main processing loop
-  while(1) {
-    process_commands();
-    update_power_state();
-    
-    if (should_enter_sleep_mode()) {
-      enter_low_power_mode();
-    }
-  }
-  
-  // Should never reach here
-  return 0;
-}`;
+  const {
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    sortField,
+    toggleSort,
+    filteredFirmware,
+    isLoading,
+    error
+  } = useFirmwareList();
 
   if (isLoading) {
     return (
@@ -84,7 +33,7 @@ int main(void) {
     );
   }
 
-  if (error || !firmwareData) {
+  if (error) {
     return (
       <MainLayout>
         <Card className="bg-white">
@@ -98,54 +47,6 @@ int main(void) {
       </MainLayout>
     );
   }
-  
-  const filteredFirmware = firmwareData
-    .filter(fw => {
-      if (statusFilter !== "all" && fw.status !== statusFilter) {
-        return false;
-      }
-      
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          fw.name.toLowerCase().includes(searchLower) ||
-          fw.version.toLowerCase().includes(searchLower) ||
-          (fw.description?.toLowerCase() || "").includes(searchLower) ||
-          fw.tags.some(tag => tag.toLowerCase().includes(searchLower))
-        );
-      }
-      
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortField === "date") {
-        return sortDirection === "desc" 
-          ? b.dateUploaded.getTime() - a.dateUploaded.getTime()
-          : a.dateUploaded.getTime() - b.dateUploaded.getTime();
-      } else if (sortField === "name") {
-        return sortDirection === "desc"
-          ? b.name.localeCompare(a.name)
-          : a.name.localeCompare(b.name);
-      } else if (sortField === "version") {
-        return sortDirection === "desc"
-          ? b.version.localeCompare(a.version)
-          : a.version.localeCompare(b.version);
-      } else if (sortField === "burnCount") {
-        return sortDirection === "desc"
-          ? b.burnCount - a.burnCount
-          : a.burnCount - b.burnCount;
-      }
-      return 0;
-    });
-
-  const toggleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("desc");
-    }
-  };
 
   return (
     <MainLayout>
@@ -164,26 +65,11 @@ int main(void) {
             onStatusChange={setStatusFilter}
           />
           
-          <div className="rounded-md border">
-            <FirmwareListHeader 
-              sortField={sortField}
-              onSort={toggleSort}
-            />
-
-            {filteredFirmware.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-muted-foreground">No firmware versions found</p>
-              </div>
-            ) : (
-              filteredFirmware.map((firmware) => (
-                <FirmwareItem
-                  key={firmware.id}
-                  firmware={firmware}
-                  mockFirmwareContent={mockFirmwareContent}
-                />
-              ))
-            )}
-          </div>
+          <FirmwareList 
+            firmware={filteredFirmware}
+            sortField={sortField}
+            onSort={toggleSort}
+          />
         </CardContent>
       </Card>
     </MainLayout>
