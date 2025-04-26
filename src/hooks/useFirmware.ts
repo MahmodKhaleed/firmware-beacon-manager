@@ -17,6 +17,7 @@ export const useFirmware = () => {
       return data.map((fw) => ({
         ...fw,
         dateUploaded: new Date(fw.date_uploaded),
+        burnCount: fw.burn_count,
       })) as Firmware[];
     },
   });
