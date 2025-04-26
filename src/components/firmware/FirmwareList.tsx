@@ -31,3 +31,4 @@ export const FirmwareList = ({ firmware, sortField, onSort }: FirmwareListProps)
     </div>
   );
 };
+
