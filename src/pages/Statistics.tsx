@@ -1,13 +1,37 @@
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockFirmwareData } from "@/data/mockFirmware";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useFirmware } from "@/hooks/useFirmware";
+import { Button } from "@/components/ui/button";
 
 const Statistics = () => {
+  const { data: firmwareData, isLoading, error } = useFirmware();
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center h-64">
+          <p className="text-muted-foreground">Loading firmware statistics...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error || !firmwareData) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center h-64 flex-col gap-4">
+          <p className="text-destructive">Error loading firmware data</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </MainLayout>
+    );
+  }
+  
   // Data prep for charts
-  const firmwareVersions = mockFirmwareData.map(fw => ({
+  const firmwareVersions = firmwareData.map(fw => ({
     name: `${fw.name} ${fw.version}`,
     burns: fw.burnCount,
     size: Math.round(fw.size / 1024),
@@ -18,7 +42,7 @@ const Statistics = () => {
   const sortedByBurns = [...firmwareVersions].sort((a, b) => b.burns - a.burns);
   
   // Group by firmware name
-  const burnsByFirmwareType = mockFirmwareData.reduce((acc: any, curr) => {
+  const burnsByFirmwareType = firmwareData.reduce((acc: any, curr) => {
     const baseName = curr.name;
     if (!acc[baseName]) {
       acc[baseName] = { name: baseName, burns: 0, versions: 0 };
@@ -31,7 +55,7 @@ const Statistics = () => {
   const firmwareTypeData = Object.values(burnsByFirmwareType);
   
   // Group by status
-  const burnsByStatus = mockFirmwareData.reduce((acc: any, curr) => {
+  const burnsByStatus = firmwareData.reduce((acc: any, curr) => {
     const status = curr.status;
     if (!acc[status]) {
       acc[status] = { name: status, value: 0 };
@@ -44,7 +68,7 @@ const Statistics = () => {
 
   // For time series chart
   const burnsByMonth: Record<string, number> = {};
-  mockFirmwareData.forEach(fw => {
+  firmwareData.forEach(fw => {
     const monthYear = `${fw.dateUploaded.getMonth() + 1}/${fw.dateUploaded.getFullYear()}`;
     if (!burnsByMonth[monthYear]) {
       burnsByMonth[monthYear] = 0;
@@ -252,7 +276,7 @@ const Statistics = () => {
                           <div className="text-right">
                             <p className="font-bold text-lg">{item.value}</p>
                             <p className="text-sm text-muted-foreground">
-                              {(item.value / mockFirmwareData.reduce((sum, fw) => sum + fw.burnCount, 0) * 100).toFixed(1)}%
+                              {(item.value / firmwareData.reduce((sum, fw) => sum + fw.burnCount, 0) * 100).toFixed(1)}%
                             </p>
                           </div>
                         </div>
@@ -263,7 +287,7 @@ const Statistics = () => {
                       <div className="flex justify-between items-center">
                         <p className="font-medium">Total Burns</p>
                         <p className="font-bold text-lg">
-                          {mockFirmwareData.reduce((sum, fw) => sum + fw.burnCount, 0)}
+                          {firmwareData.reduce((sum, fw) => sum + fw.burnCount, 0)}
                         </p>
                       </div>
                     </div>

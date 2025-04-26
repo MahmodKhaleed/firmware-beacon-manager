@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
+type FirmwareStatus = "stable" | "beta" | "draft";
+
 const Upload = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ const Upload = () => {
     name: "",
     version: "",
     description: "",
-    status: "draft",
+    status: "draft" as FirmwareStatus,
     tags: [] as string[],
   });
   const [currentTag, setCurrentTag] = useState("");
@@ -138,7 +140,7 @@ const Upload = () => {
         <Card className="bg-white">
           <CardHeader>
             <CardTitle>Upload Firmware</CardTitle>
-            <CardDescription>Upload a new C firmware file for OTA updates</CardDescription>
+            <CardDescription>Upload a new firmware file for OTA updates</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -149,7 +151,7 @@ const Upload = () => {
                     <Input
                       id="firmware-file"
                       type="file"
-                      accept=".c,.h"
+                      accept=".hex,.exe,.elf"
                       onChange={handleFileChange}
                       className="flex-1"
                     />
@@ -160,7 +162,7 @@ const Upload = () => {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Select a C source (.c) or header (.h) file
+                    Select a firmware file (.hex, .exe, .elf)
                   </p>
                 </div>
 
@@ -188,7 +190,7 @@ const Upload = () => {
                   <Label htmlFor="status">Status</Label>
                   <Select 
                     value={formData.status} 
-                    onValueChange={(value) => setFormData({...formData, status: value})}
+                    onValueChange={(value: FirmwareStatus) => setFormData({...formData, status: value})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />

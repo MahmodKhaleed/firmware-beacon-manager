@@ -4,18 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockFirmwareData } from "@/data/mockFirmware";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Search, Download, Tag, Eye, ArrowUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useFirmware } from "@/hooks/useFirmware";
+import type { Firmware } from "@/types/firmware";
 
 const Versions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortField, setSortField] = useState("date");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [selectedFirmware, setSelectedFirmware] = useState<typeof mockFirmwareData[0] | null>(null);
+  const [selectedFirmware, setSelectedFirmware] = useState<Firmware | null>(null);
+  const { data: firmwareData, isLoading, error } = useFirmware();
   
   // Mock firmware content for the viewer
   const mockFirmwareContent = `
@@ -72,8 +74,37 @@ int main(void) {
   // Should never reach here
   return 0;
 }`;
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <Card className="bg-white">
+          <CardContent className="pt-6">
+            <div className="flex justify-center items-center h-64">
+              <p className="text-muted-foreground">Loading firmware data...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </MainLayout>
+    );
+  }
+
+  if (error || !firmwareData) {
+    return (
+      <MainLayout>
+        <Card className="bg-white">
+          <CardContent className="pt-6">
+            <div className="flex justify-center items-center h-64 flex-col gap-4">
+              <p className="text-destructive">Error loading firmware data</p>
+              <Button onClick={() => window.location.reload()}>Try Again</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </MainLayout>
+    );
+  }
   
-  const filteredFirmware = mockFirmwareData
+  const filteredFirmware = firmwareData
     .filter(fw => {
       // Apply status filter
       if (statusFilter !== "all" && fw.status !== statusFilter) {
@@ -86,7 +117,7 @@ int main(void) {
         return (
           fw.name.toLowerCase().includes(searchLower) ||
           fw.version.toLowerCase().includes(searchLower) ||
-          fw.description.toLowerCase().includes(searchLower) ||
+          (fw.description?.toLowerCase() || '').includes(searchLower) ||
           fw.tags.some(tag => tag.toLowerCase().includes(searchLower))
         );
       }
@@ -222,8 +253,8 @@ int main(void) {
                   </div>
 
                   <div className="col-span-3 flex flex-wrap gap-1">
-                    {firmware.tags.map(tag => (
-                      <Badge key={tag} variant="outline" className="text-xs">
+                    {firmware.tags.map((tag, index) => (
+                      <Badge key={`${tag}-${index}`} variant="outline" className="text-xs">
                         {tag}
                       </Badge>
                     ))}
@@ -251,16 +282,16 @@ int main(void) {
                       <DialogContent className="max-w-3xl">
                         <DialogHeader>
                           <DialogTitle className="flex items-center gap-2">
-                            {firmware?.name} <span className="text-muted-foreground">{firmware?.version}</span>
-                            <Badge variant="outline" className="ml-2">{firmware?.status}</Badge>
+                            {selectedFirmware?.name} <span className="text-muted-foreground">{selectedFirmware?.version}</span>
+                            <Badge variant="outline" className="ml-2">{selectedFirmware?.status}</Badge>
                           </DialogTitle>
                           <DialogDescription>
-                            Uploaded on {firmware?.dateUploaded.toLocaleDateString()} • {(firmware?.size || 0) / 1024} KB • 
-                            {firmware?.burnCount} device burns
+                            Uploaded on {selectedFirmware?.dateUploaded.toLocaleDateString()} • {(selectedFirmware?.size || 0) / 1024} KB • 
+                            {selectedFirmware?.burnCount} device burns
                           </DialogDescription>
                         </DialogHeader>
                         <div className="bg-slate-950 text-slate-50 p-4 rounded-md overflow-auto max-h-96 font-mono text-sm">
-                          <pre>{mockFirmwareContent}</pre>
+                          <pre>{selectedFirmware?.content || mockFirmwareContent}</pre>
                         </div>
                       </DialogContent>
                     </Dialog>

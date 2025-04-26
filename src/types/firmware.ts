@@ -5,10 +5,10 @@ export interface Firmware {
   version: string;
   description: string | null;
   size: number;
-  date_uploaded: string;      // From database (snake_case)
-  dateUploaded: Date;         // For UI usage (camelCase)
-  burn_count: number;         // From database (snake_case)
-  burnCount: number;          // For UI usage (camelCase)
+  date_uploaded: string | null;      // From database (snake_case)
+  dateUploaded: Date;               // For UI usage (camelCase)
+  burn_count: number | null;        // From database (snake_case)
+  burnCount: number;                // For UI usage (camelCase)
   content?: string | null;
   tags: string[];
   status: 'stable' | 'beta' | 'draft';

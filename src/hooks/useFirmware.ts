@@ -14,10 +14,12 @@ export const useFirmware = () => {
 
       if (error) throw error;
 
+      // Convert snake_case DB fields to camelCase for UI
       return data.map((fw) => ({
         ...fw,
-        dateUploaded: new Date(fw.date_uploaded),
-        burnCount: fw.burn_count,
+        dateUploaded: new Date(fw.date_uploaded || new Date()),
+        burnCount: fw.burn_count || 0,
+        tags: fw.tags || [],
       })) as Firmware[];
     },
   });
