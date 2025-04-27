@@ -1,10 +1,14 @@
 
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FirmwareSearch } from "@/components/firmware/FirmwareSearch";
 import { FirmwareList } from "@/components/firmware/FirmwareList";
 import { useFirmwareList } from "@/hooks/useFirmwareList";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/sonner";
 
 const Versions = () => {
   const {
@@ -18,6 +22,21 @@ const Versions = () => {
     isLoading,
     error
   } = useFirmwareList();
+  
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect to auth page if not logged in
+  useEffect(() => {
+    if (!user) {
+      toast.error("Please sign in to view firmware versions");
+      navigate("/auth");
+    }
+  }, [user, navigate]);
+
+  if (!user) {
+    return null; // Component will redirect in useEffect
+  }
 
   if (isLoading) {
     return (
@@ -77,4 +96,3 @@ const Versions = () => {
 };
 
 export default Versions;
-

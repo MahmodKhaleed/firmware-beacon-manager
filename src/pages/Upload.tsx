@@ -6,18 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload as UploadIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/sonner";
 
 type FirmwareStatus = "stable" | "beta" | "draft";
 
 const Upload = () => {
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
@@ -29,6 +32,20 @@ const Upload = () => {
   });
   const [currentTag, setCurrentTag] = useState("");
   
+  // Redirect non-admin users
+  useEffect(() => {
+    if (!user) {
+      toast.error("Please sign in to access this page");
+      navigate("/auth");
+      return;
+    }
+    
+    if (user && !isAdmin) {
+      toast.error("You don't have permission to upload firmware");
+      navigate("/versions");
+    }
+  }, [user, isAdmin, navigate]);
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -38,7 +55,7 @@ const Upload = () => {
       if (hasValidExtension) {
         setSelectedFile(file);
       } else {
-        toast({
+        uiToast({
           title: "Invalid file type",
           description: "Please select a valid firmware file (.hex, .exe, .elf, or .bin)",
           variant: "destructive",
@@ -68,8 +85,17 @@ const Upload = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user || !isAdmin) {
+      uiToast({
+        title: "Permission denied",
+        description: "Only administrators can upload firmware",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!selectedFile) {
-      toast({
+      uiToast({
         title: "No file selected",
         description: "Please select a firmware file to upload",
         variant: "destructive",
@@ -78,7 +104,7 @@ const Upload = () => {
     }
     
     if (!formData.name || !formData.version) {
-      toast({
+      uiToast({
         title: "Missing information",
         description: "Please provide a name and version",
         variant: "destructive",
@@ -90,21 +116,18 @@ const Upload = () => {
     console.log('Starting firmware upload process...'); // Debug log
     
     try {
-      // Read file as text
-      const fileReader = new FileReader();
+      // For binary files, we need to use ArrayBuffer instead of text
+      const fileBuffer = await selectedFile.arrayBuffer();
       
-      // Use a promise to handle the file reading
-      const fileContent = await new Promise<string>((resolve, reject) => {
-        fileReader.onload = () => {
-          resolve(fileReader.result as string);
-        };
-        fileReader.onerror = () => {
-          reject(new Error("Failed to read file"));
-        };
-        fileReader.readAsText(selectedFile);
-      });
+      // Convert ArrayBuffer to Base64 string for storage
+      const base64Content = btoa(
+        new Uint8Array(fileBuffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte), 
+          ''
+        )
+      );
       
-      console.log('File content read successfully, file size:', fileContent.length); // Debug log
+      console.log('File content processed, size:', fileBuffer.byteLength); // Debug log
       
       // Prepare the firmware data
       const firmwareData = {
@@ -114,7 +137,7 @@ const Upload = () => {
         size: selectedFile.size,
         status: formData.status,
         tags: formData.tags,
-        content: fileContent,
+        content: base64Content,
         date_uploaded: new Date().toISOString(),
         burn_count: 0,
       };
@@ -134,7 +157,7 @@ const Upload = () => {
       
       console.log('Upload successful:', data); // Debug log
       
-      toast({
+      uiToast({
         title: "Firmware uploaded successfully",
         description: `${formData.name} v${formData.version} has been added to the repository`,
       });
@@ -143,15 +166,16 @@ const Upload = () => {
       navigate('/versions');
     } catch (error) {
       console.error('Upload error:', error);
-      toast({
+      uiToast({
         title: "Upload failed",
         description: "There was an error uploading the firmware. Please try again.",
         variant: "destructive",
       });
     } finally {
       setUploading(false);
-      // Reset form data only if upload was successful
-      if (!uploading) {
+      // Only reset form if component is still mounted
+      const formWasActive = document.getElementById('firmware-form');
+      if (formWasActive) {
         setSelectedFile(null);
         setFormData({
           name: "",
@@ -164,6 +188,10 @@ const Upload = () => {
     }
   };
 
+  if (!user || !isAdmin) {
+    return null; // Component will redirect in useEffect
+  }
+
   return (
     <MainLayout>
       <div className="max-w-3xl mx-auto">
@@ -173,7 +201,7 @@ const Upload = () => {
             <CardDescription>Upload a new firmware file for OTA updates</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form id="firmware-form" onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div className="grid w-full items-center gap-1.5">
                   <Label htmlFor="firmware-file">Firmware File</Label>

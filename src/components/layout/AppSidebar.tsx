@@ -11,38 +11,57 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Link } from "react-router-dom"
-
-// Menu items
-const items = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Upload Firmware",
-    url: "/upload",
-    icon: Upload,
-  },
-  {
-    title: "Version History",
-    url: "/versions",
-    icon: Clock,
-  },
-  {
-    title: "Burn Statistics",
-    url: "/statistics",
-    icon: BarChart2,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-  },
-]
+import { Link, useLocation } from "react-router-dom"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function AppSidebar() {
+  const location = useLocation();
+  const { isAdmin } = useAuth();
+  
+  // Menu items with conditional admin-only items
+  const items = [
+    {
+      title: "Dashboard",
+      url: "/",
+      icon: Home,
+      adminOnly: false
+    },
+    {
+      title: "Upload Firmware",
+      url: "/upload",
+      icon: Upload,
+      adminOnly: true
+    },
+    {
+      title: "Version History",
+      url: "/versions",
+      icon: Clock,
+      adminOnly: false
+    },
+    {
+      title: "Burn Statistics",
+      url: "/statistics",
+      icon: BarChart2,
+      adminOnly: false
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
+      adminOnly: false
+    },
+  ];
+
+  // Filter items based on user role
+  const filteredItems = items.filter(item => !item.adminOnly || isAdmin);
+  
+  // Check if current path matches exactly or is root of the item's path
+  const isActive = (url: string) => {
+    if (url === '/' && location.pathname === '/') return true;
+    if (url !== '/' && location.pathname.startsWith(url)) return true;
+    return false;
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -58,9 +77,9 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild data-active={isActive(item.url)}>
                     <Link to={item.url} className="flex items-center">
                       <item.icon className="mr-3 h-5 w-5" />
                       <span>{item.title}</span>
