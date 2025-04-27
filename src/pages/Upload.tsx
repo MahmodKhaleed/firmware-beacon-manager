@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,36 +87,53 @@ const Upload = () => {
     }
     
     setUploading(true);
-    console.log('Starting firmware upload...'); // Debug log
-
+    console.log('Starting firmware upload process...'); // Debug log
+    
     try {
-      // Read file content
-      const fileContent = await selectedFile.text();
-      console.log('File content read successfully'); // Debug log
+      // Read file as text
+      const fileReader = new FileReader();
+      
+      // Use a promise to handle the file reading
+      const fileContent = await new Promise<string>((resolve, reject) => {
+        fileReader.onload = () => {
+          resolve(fileReader.result as string);
+        };
+        fileReader.onerror = () => {
+          reject(new Error("Failed to read file"));
+        };
+        fileReader.readAsText(selectedFile);
+      });
+      
+      console.log('File content read successfully, file size:', fileContent.length); // Debug log
+      
+      // Prepare the firmware data
+      const firmwareData = {
+        name: formData.name,
+        version: formData.version,
+        description: formData.description || null,
+        size: selectedFile.size,
+        status: formData.status,
+        tags: formData.tags,
+        content: fileContent,
+        date_uploaded: new Date().toISOString(),
+        burn_count: 0,
+      };
+      
+      console.log('Sending firmware data to Supabase...'); // Debug log
       
       // Insert firmware data into Supabase
       const { data, error } = await supabase
         .from('firmware')
-        .insert({
-          name: formData.name,
-          version: formData.version,
-          description: formData.description || null,
-          size: selectedFile.size,
-          status: formData.status,
-          tags: formData.tags,
-          content: fileContent,
-          date_uploaded: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
+        .insert(firmwareData)
+        .select();
+      
       if (error) {
-        console.error('Upload error:', error); // Debug log
+        console.error('Supabase error:', error); // Debug log
         throw error;
       }
-
+      
       console.log('Upload successful:', data); // Debug log
-
+      
       toast({
         title: "Firmware uploaded successfully",
         description: `${formData.name} v${formData.version} has been added to the repository`,
@@ -132,14 +150,17 @@ const Upload = () => {
       });
     } finally {
       setUploading(false);
-      setSelectedFile(null);
-      setFormData({
-        name: "",
-        version: "",
-        description: "",
-        status: "draft",
-        tags: [],
-      });
+      // Reset form data only if upload was successful
+      if (!uploading) {
+        setSelectedFile(null);
+        setFormData({
+          name: "",
+          version: "",
+          description: "",
+          status: "draft",
+          tags: [],
+        });
+      }
     }
   };
 
