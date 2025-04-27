@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +31,7 @@ const Upload = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const validExtensions = ['.hex', '.exe', '.elf'];
+      const validExtensions = ['.hex', '.exe', '.elf', '.bin'];
       const hasValidExtension = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
       
       if (hasValidExtension) {
@@ -40,7 +39,7 @@ const Upload = () => {
       } else {
         toast({
           title: "Invalid file type",
-          description: "Please select a valid firmware file (.hex, .exe, or .elf)",
+          description: "Please select a valid firmware file (.hex, .exe, .elf, or .bin)",
           variant: "destructive",
         });
         e.target.value = '';
@@ -87,13 +86,15 @@ const Upload = () => {
     }
     
     setUploading(true);
-    
+    console.log('Starting firmware upload...'); // Debug log
+
     try {
       // Read file content
       const fileContent = await selectedFile.text();
+      console.log('File content read successfully'); // Debug log
       
       // Insert firmware data into Supabase
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('firmware')
         .insert({
           name: formData.name,
@@ -103,9 +104,17 @@ const Upload = () => {
           status: formData.status,
           tags: formData.tags,
           content: fileContent,
-        });
+          date_uploaded: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Upload error:', error); // Debug log
+        throw error;
+      }
+
+      console.log('Upload successful:', data); // Debug log
 
       toast({
         title: "Firmware uploaded successfully",
@@ -151,7 +160,7 @@ const Upload = () => {
                     <Input
                       id="firmware-file"
                       type="file"
-                      accept=".hex,.exe,.elf"
+                      accept=".hex,.exe,.elf,.bin"
                       onChange={handleFileChange}
                       className="flex-1"
                     />
@@ -162,7 +171,7 @@ const Upload = () => {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Select a firmware file (.hex, .exe, .elf)
+                    Select a firmware file (.hex, .exe, .elf, or .bin)
                   </p>
                 </div>
 
