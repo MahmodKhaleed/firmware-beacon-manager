@@ -10,6 +10,7 @@ export interface Firmware {
   burn_count: number | null;        // From database (snake_case)
   burnCount: number;                // For UI usage (camelCase)
   content?: string | null;
+  file_url?: string | null;         // New field for storage URL
   tags: string[];
   status: 'stable' | 'beta' | 'draft';
 }

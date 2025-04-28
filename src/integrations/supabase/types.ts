@@ -15,6 +15,7 @@ export type Database = {
           content: string | null
           date_uploaded: string | null
           description: string | null
+          file_url: string | null
           id: string
           name: string
           size: number
@@ -27,6 +28,7 @@ export type Database = {
           content?: string | null
           date_uploaded?: string | null
           description?: string | null
+          file_url?: string | null
           id?: string
           name: string
           size: number
@@ -39,6 +41,7 @@ export type Database = {
           content?: string | null
           date_uploaded?: string | null
           description?: string | null
+          file_url?: string | null
           id?: string
           name?: string
           size?: number

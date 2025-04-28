@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import type { Firmware } from "@/types/firmware";
 import { Download, Eye, Tag } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface FirmwareItemProps {
   firmware: Firmware;
@@ -13,6 +14,56 @@ interface FirmwareItemProps {
 
 export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProps) => {
   const [isSelected, setIsSelected] = useState(false);
+  const { toast } = useToast();
+
+  const handleDownload = async () => {
+    try {
+      if (!firmware.file_url) {
+        toast({
+          title: "Download failed",
+          description: "This firmware file is not available for download.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Get the file name from the URL
+      const fileName = firmware.file_url.split('/').pop() || `${firmware.name}-${firmware.version}.bin`;
+      
+      // Fetch the file from the storage URL
+      const response = await fetch(firmware.file_url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Get the file as a blob
+      const blob = await response.blob();
+      
+      // Create a link element and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download started",
+        description: `${firmware.name} v${firmware.version} is being downloaded.`,
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading the firmware.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="grid grid-cols-12 gap-4 p-3 text-sm items-center border-t hover:bg-slate-50">
@@ -68,12 +119,31 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
                 {firmware.burnCount} device burns
               </DialogDescription>
             </DialogHeader>
-            <div className="bg-slate-950 text-slate-50 p-4 rounded-md overflow-auto max-h-96 font-mono text-sm">
-              <pre>{firmware.content || mockFirmwareContent}</pre>
-            </div>
+            {firmware.file_url ? (
+              <div className="flex flex-col gap-4">
+                <p>This firmware file is stored in Supabase Storage.</p>
+                <Button onClick={handleDownload} className="w-full">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Firmware
+                </Button>
+              </div>
+            ) : firmware.content ? (
+              <div className="bg-slate-950 text-slate-50 p-4 rounded-md overflow-auto max-h-96 font-mono text-sm">
+                <pre>{firmware.content || mockFirmwareContent}</pre>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No preview available for this firmware file.
+              </p>
+            )}
           </DialogContent>
         </Dialog>
-        <Button variant="ghost" size="icon">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={handleDownload}
+          disabled={!firmware.file_url}
+        >
           <Download className="h-4 w-4" />
         </Button>
         <Button variant="ghost" size="icon">

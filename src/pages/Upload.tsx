@@ -107,34 +107,38 @@ const Upload = () => {
     console.log('Starting firmware upload process...'); // Debug log
     
     try {
-      // Read file as ArrayBuffer
-      const fileReader = new FileReader();
+      // Generate a unique file path for storage
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${formData.name.replace(/\s+/g, '-')}-${formData.version.replace(/\./g, '-')}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
       
-      // Use a promise to handle the file reading
-      const fileContent = await new Promise<string>((resolve, reject) => {
-        fileReader.onload = () => {
-          // Convert ArrayBuffer to Base64 string
-          if (fileReader.result instanceof ArrayBuffer) {
-            const bytes = new Uint8Array(fileReader.result);
-            let binary = '';
-            for (let i = 0; i < bytes.byteLength; i++) {
-              binary += String.fromCharCode(bytes[i]);
-            }
-            resolve(window.btoa(binary));
-          } else {
-            // If it's already a string (text file)
-            resolve(fileReader.result as string);
-          }
-        };
-        fileReader.onerror = () => {
-          reject(new Error("Failed to read file"));
-        };
-        fileReader.readAsArrayBuffer(selectedFile);
-      });
+      console.log(`Uploading file to storage: ${filePath}`); // Debug log
       
-      console.log('File content read successfully, file size:', selectedFile.size); // Debug log
+      // Upload the file to Supabase Storage
+      const { data: storageData, error: storageError } = await supabase
+        .storage
+        .from('firmwares')
+        .upload(filePath, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (storageError) {
+        console.error('Storage upload error:', storageError); // Debug log
+        throw storageError;
+      }
       
-      // Prepare the firmware data
+      console.log('File uploaded successfully to storage:', storageData); // Debug log
+      
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('firmwares')
+        .getPublicUrl(filePath);
+      
+      console.log('Public URL generated:', publicUrl); // Debug log
+      
+      // Prepare the firmware data for database
       const firmwareData = {
         name: formData.name,
         version: formData.version,
@@ -142,21 +146,21 @@ const Upload = () => {
         size: selectedFile.size,
         status: formData.status,
         tags: formData.tags,
-        content: fileContent,
         date_uploaded: new Date().toISOString(),
         burn_count: 0,
+        file_url: publicUrl
       };
       
-      console.log('Sending firmware data to Supabase...'); // Debug log
+      console.log('Sending firmware data to Supabase database...'); // Debug log
       
-      // Insert firmware data into Supabase
+      // Insert firmware data into Supabase database
       const { data, error } = await supabase
         .from('firmware')
         .insert(firmwareData)
         .select();
       
       if (error) {
-        console.error('Supabase error:', error); // Debug log
+        console.error('Database error:', error); // Debug log
         throw error;
       }
       
@@ -178,19 +182,6 @@ const Upload = () => {
       });
     } finally {
       setUploading(false);
-      // Reset form data only if upload was successful
-      if (!uploading) {
-        setSelectedFile(null);
-        setFormData({
-          name: "",
-          version: "",
-          description: "",
-          status: "draft",
-          tags: [],
-        });
-        setPassword("");
-        setIsPasswordValid(false);
-      }
     }
   };
 
