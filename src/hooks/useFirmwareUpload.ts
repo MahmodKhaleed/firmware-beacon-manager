@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 
-type FirmwareStatus = "stable" | "beta" | "draft";
+export type FirmwareStatus = "stable" | "beta" | "draft";
 
 export interface FirmwareFormData {
   name: string;

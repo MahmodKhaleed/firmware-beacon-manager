@@ -1,11 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload as UploadIcon, Loader2 } from "lucide-react";
@@ -13,18 +13,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/sonner";
 import { FirmwareFileUpload } from "@/components/firmware/FirmwareFileUpload";
 import { FirmwareTags } from "@/components/firmware/FirmwareTags";
-import { useFirmwareUpload } from "@/hooks/useFirmwareUpload";
+import { useFirmwareUpload, FirmwareFormData } from "@/hooks/useFirmwareUpload";
 
 const Upload = () => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const { selectedFile, uploading, handleFileChange, uploadFirmware } = useFirmwareUpload();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FirmwareFormData>({
     name: "",
     version: "",
     description: "",
-    status: "draft" as const,
-    tags: [] as string[],
+    status: "draft",
+    tags: [],
   });
   
   // Redirect non-admin users
@@ -90,8 +90,8 @@ const Upload = () => {
                   <Label htmlFor="status">Status</Label>
                   <Select 
                     value={formData.status} 
-                    onValueChange={(value: "stable" | "beta" | "draft") => 
-                      setFormData({...formData, status: value})
+                    onValueChange={(value) => 
+                      setFormData({...formData, status: value as "stable" | "beta" | "draft"})
                     }
                   >
                     <SelectTrigger>
