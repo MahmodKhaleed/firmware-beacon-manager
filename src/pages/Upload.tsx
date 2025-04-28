@@ -7,19 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Upload as UploadIcon, Loader2 } from "lucide-react";
+import { Upload as UploadIcon, Loader2, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-type FirmwareStatus = "stable" | "beta" | "draft";
+// Define firmware status type
+export type FirmwareStatus = "stable" | "beta" | "draft";
 
 const Upload = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [password, setPassword] = useState("");
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     version: "",
@@ -46,6 +49,11 @@ const Upload = () => {
         e.target.value = '';
       }
     }
+  };
+  
+  const validatePassword = (input: string) => {
+    setPassword(input);
+    setIsPasswordValid(input === "AmazingFOTA");
   };
   
   const addTag = () => {
@@ -86,25 +94,45 @@ const Upload = () => {
       return;
     }
     
+    if (!isPasswordValid) {
+      toast({
+        title: "Invalid password",
+        description: "Please enter the correct password to upload firmware",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setUploading(true);
     console.log('Starting firmware upload process...'); // Debug log
     
     try {
-      // Read file as text
+      // Read file as ArrayBuffer
       const fileReader = new FileReader();
       
       // Use a promise to handle the file reading
       const fileContent = await new Promise<string>((resolve, reject) => {
         fileReader.onload = () => {
-          resolve(fileReader.result as string);
+          // Convert ArrayBuffer to Base64 string
+          if (fileReader.result instanceof ArrayBuffer) {
+            const bytes = new Uint8Array(fileReader.result);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            resolve(window.btoa(binary));
+          } else {
+            // If it's already a string (text file)
+            resolve(fileReader.result as string);
+          }
         };
         fileReader.onerror = () => {
           reject(new Error("Failed to read file"));
         };
-        fileReader.readAsText(selectedFile);
+        fileReader.readAsArrayBuffer(selectedFile);
       });
       
-      console.log('File content read successfully, file size:', fileContent.length); // Debug log
+      console.log('File content read successfully, file size:', selectedFile.size); // Debug log
       
       // Prepare the firmware data
       const firmwareData = {
@@ -160,6 +188,8 @@ const Upload = () => {
           status: "draft",
           tags: [],
         });
+        setPassword("");
+        setIsPasswordValid(false);
       }
     }
   };
@@ -193,6 +223,23 @@ const Upload = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Select a firmware file (.hex, .exe, .elf, or .bin)
+                  </p>
+                </div>
+
+                <div className="grid w-full items-center gap-1.5">
+                  <Label htmlFor="password" className="flex items-center gap-1">
+                    <Lock className="h-4 w-4" /> Password
+                  </Label>
+                  <Input 
+                    id="password" 
+                    type="password"
+                    placeholder="Enter upload password" 
+                    value={password}
+                    onChange={(e) => validatePassword(e.target.value)}
+                    className={isPasswordValid ? "border-green-500" : ""}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Enter the password to upload firmware
                   </p>
                 </div>
 
@@ -284,7 +331,11 @@ const Upload = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={uploading}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={uploading || !isPasswordValid}
+              >
                 {uploading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

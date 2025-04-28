@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -12,12 +12,6 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
 
   return (
     <SidebarProvider>
@@ -31,11 +25,11 @@ export function MainLayout({ children }: MainLayoutProps) {
             <div className="flex items-center gap-4">
               <SidebarTrigger className="md:hidden" />
               {user ? (
-                <Button onClick={handleSignOut} variant="outline">
+                <Button onClick={signOut} variant="outline">
                   Sign Out
                 </Button>
               ) : (
-                <Button asChild>
+                <Button asChild variant="outline">
                   <Link to="/auth">Sign In</Link>
                 </Button>
               )}
