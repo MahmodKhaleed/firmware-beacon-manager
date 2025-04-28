@@ -11,7 +11,6 @@ import Versions from "./pages/Versions";
 import Statistics from "./pages/Statistics";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
-import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +27,6 @@ const App = () => (
             <Route path="/upload" element={<Upload />} />
             <Route path="/versions" element={<Versions />} />
             <Route path="/statistics" element={<Statistics />} />
-            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
