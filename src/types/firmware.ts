@@ -12,5 +12,7 @@ export interface Firmware {
   content?: string | null;          // Legacy field for migration purposes
   file_url: string | null;         // Field for storage URL
   tags: string[];
-  status: 'stable' | 'beta' | 'draft';
+  status: FirmwareStatus;
 }
+
+export type FirmwareStatus = 'stable' | 'beta' | 'draft';
