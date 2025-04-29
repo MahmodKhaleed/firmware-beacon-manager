@@ -12,7 +12,6 @@ export type Database = {
       firmware: {
         Row: {
           burn_count: number | null
-          content: string | null
           date_uploaded: string | null
           description: string | null
           file_url: string | null
@@ -25,7 +24,6 @@ export type Database = {
         }
         Insert: {
           burn_count?: number | null
-          content?: string | null
           date_uploaded?: string | null
           description?: string | null
           file_url?: string | null
@@ -38,7 +36,6 @@ export type Database = {
         }
         Update: {
           burn_count?: number | null
-          content?: string | null
           date_uploaded?: string | null
           description?: string | null
           file_url?: string | null

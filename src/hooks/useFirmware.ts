@@ -48,8 +48,3 @@ export const useFirmwareById = (id: string) => {
     enabled: !!id,
   });
 };
-
-// Function to migrate all firmware from content to file_url
-export const migrateFirmwareContent = async (id: string) => {
-  // Implementation will depend on the firmwareMigration utility
-};

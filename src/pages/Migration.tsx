@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { migrateAllFirmware } from "@/utils/firmwareMigration";
+import { migrateAllFirmware } from "@/utils/firmwareMigrationUtils";
 import { useFirmware } from "@/hooks/useFirmware";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
