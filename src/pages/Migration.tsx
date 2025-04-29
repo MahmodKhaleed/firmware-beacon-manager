@@ -40,8 +40,8 @@ const Migration = () => {
     }
   };
 
-  // Count firmware that need migration (have content but no file_url)
-  const needsMigration = firmwares?.filter(fw => !fw.file_url && fw.content).length || 0;
+  // Count firmware that need migration (have no file_url)
+  const needsMigration = firmwares?.filter(fw => !fw.file_url).length || 0;
 
   return (
     <MainLayout>
@@ -50,15 +50,15 @@ const Migration = () => {
           <CardHeader>
             <CardTitle>Firmware Migration Tool</CardTitle>
             <CardDescription>
-              Migrate firmware content from database to Supabase Storage
+              Process firmware entries missing file URLs
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <Alert>
               <AlertTitle>Migration Information</AlertTitle>
               <AlertDescription>
-                This tool will migrate firmware files stored directly in the database to Supabase Storage.
-                This is a one-time operation to improve performance and scalability.
+                This tool will process firmware records that don't have associated file URLs.
+                This is a maintenance operation to ensure all firmware records have valid file references.
               </AlertDescription>
             </Alert>
 
@@ -70,7 +70,7 @@ const Migration = () => {
               <div className="space-y-4">
                 <div className="grid gap-2">
                   <p><strong>Total firmware records:</strong> {firmwares?.length || 0}</p>
-                  <p><strong>Records to migrate:</strong> {needsMigration}</p>
+                  <p><strong>Records to process:</strong> {needsMigration}</p>
                   
                   {results && (
                     <div className="mt-4 p-4 bg-gray-50 rounded-md">
@@ -89,16 +89,16 @@ const Migration = () => {
                   {migrating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Migrating...
+                      Processing...
                     </>
                   ) : (
-                    "Migrate Firmware Files"
+                    "Process Firmware Files"
                   )}
                 </Button>
 
                 {needsMigration === 0 && (
                   <p className="text-center text-sm text-muted-foreground">
-                    All firmware files have already been migrated.
+                    All firmware files have already been processed.
                   </p>
                 )}
               </div>

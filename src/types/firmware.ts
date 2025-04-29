@@ -9,7 +9,6 @@ export interface Firmware {
   dateUploaded: Date;               // For UI usage (camelCase)
   burn_count: number | null;        // From database (snake_case)
   burnCount: number;                // For UI usage (camelCase)
-  content?: string | null;          // Legacy field for migration purposes
   file_url: string | null;         // Field for storage URL
   tags: string[];
   status: FirmwareStatus;
