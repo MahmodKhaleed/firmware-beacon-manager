@@ -127,10 +127,6 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
                   Download Firmware
                 </Button>
               </div>
-            ) : firmware.content ? (
-              <div className="bg-slate-950 text-slate-50 p-4 rounded-md overflow-auto max-h-96 font-mono text-sm">
-                <pre>{firmware.content || mockFirmwareContent}</pre>
-              </div>
             ) : (
               <p className="text-center text-muted-foreground py-8">
                 No preview available for this firmware file.
