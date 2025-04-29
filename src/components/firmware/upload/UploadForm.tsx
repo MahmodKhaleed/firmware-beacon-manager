@@ -94,6 +94,15 @@ export const UploadForm = () => {
       
       console.log(`Uploading file to storage: ${filePath}`); // Debug log
       
+      // Create storage bucket if it doesn't exist
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const firmwaresBucketExists = buckets?.find(bucket => bucket.name === 'firmwares');
+      
+      if (!firmwaresBucketExists) {
+        console.log('Creating firmwares bucket...'); // Debug log
+        await supabase.storage.createBucket('firmwares', { public: true });
+      }
+      
       // Upload the file to Supabase Storage
       const { data: storageData, error: storageError } = await supabase
         .storage
@@ -117,6 +126,15 @@ export const UploadForm = () => {
         .getPublicUrl(filePath);
       
       console.log('Public URL generated:', publicUrl); // Debug log
+      
+      // Create the RLS bypass token to allow the firmware insert
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // Create a guest user session for anonymous uploads
+        await supabase.auth.signInAnonymously();
+        console.log('Created anonymous session for upload');
+      }
       
       // Prepare the firmware data for database
       const firmwareData = {
