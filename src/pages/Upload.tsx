@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Upload as UploadIcon, Loader2, Lock } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -125,7 +124,7 @@ const Upload = () => {
         
       if (storageError) {
         console.error('Storage upload error:', storageError); // Debug log
-        throw storageError;
+        throw new Error(`Storage error: ${storageError.message}`);
       }
       
       console.log('File uploaded successfully to storage:', storageData); // Debug log
@@ -151,7 +150,7 @@ const Upload = () => {
         file_url: publicUrl
       };
       
-      console.log('Sending firmware data to Supabase database...'); // Debug log
+      console.log('Sending firmware data to Supabase database:', firmwareData); // Debug log
       
       // Insert firmware data into Supabase database
       const { data, error } = await supabase
@@ -161,7 +160,20 @@ const Upload = () => {
       
       if (error) {
         console.error('Database error:', error); // Debug log
-        throw error;
+        
+        // Try to delete the uploaded file to maintain consistency
+        try {
+          await supabase.storage.from('firmwares').remove([filePath]);
+        } catch (removeError) {
+          console.error('Failed to clean up storage after database error:', removeError);
+        }
+        
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      if (!data || data.length === 0) {
+        console.error('No data returned from insert operation');
+        throw new Error('Failed to create firmware record');
       }
       
       console.log('Upload successful:', data); // Debug log
@@ -173,11 +185,11 @@ const Upload = () => {
       
       // Navigate to versions page after successful upload
       navigate('/versions');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading the firmware. Please try again.",
+        description: error.message || "There was an error uploading the firmware. Please try again.",
         variant: "destructive",
       });
     } finally {

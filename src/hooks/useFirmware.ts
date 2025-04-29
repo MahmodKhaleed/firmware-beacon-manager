@@ -24,3 +24,32 @@ export const useFirmware = () => {
     },
   });
 };
+
+// Function to get a single firmware by ID
+export const useFirmwareById = (id: string) => {
+  return useQuery({
+    queryKey: ["firmware", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("firmware")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      return {
+        ...data,
+        dateUploaded: new Date(data.date_uploaded || new Date()),
+        burnCount: data.burn_count || 0,
+        tags: data.tags || [],
+      } as Firmware;
+    },
+    enabled: !!id,
+  });
+};
+
+// Function to migrate all firmware from content to file_url
+export const migrateFirmwareContent = async (id: string) => {
+  // Implementation will depend on the firmwareMigration utility
+};
