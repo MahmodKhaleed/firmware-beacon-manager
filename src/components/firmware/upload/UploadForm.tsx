@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Upload as UploadIcon, Loader2, Lock } from "lucide-react";
+import { Upload as UploadIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -127,15 +127,6 @@ export const UploadForm = () => {
       
       console.log('Public URL generated:', publicUrl); // Debug log
       
-      // Create the RLS bypass token to allow the firmware insert
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        // Create a guest user session for anonymous uploads
-        await supabase.auth.signInAnonymously();
-        console.log('Created anonymous session for upload');
-      }
-      
       // Prepare the firmware data for database
       const firmwareData = {
         name: formData.name,
@@ -151,7 +142,7 @@ export const UploadForm = () => {
       
       console.log('Sending firmware data to Supabase database:', firmwareData); // Debug log
       
-      // Insert firmware data into Supabase database
+      // Insert firmware data into Supabase database - now should work with our new RLS policy
       const { data, error } = await supabase
         .from('firmware')
         .insert(firmwareData)
