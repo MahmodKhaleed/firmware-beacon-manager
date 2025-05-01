@@ -16,11 +16,14 @@ interface FirmwareItemProps {
 
 export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProps) => {
   const [isSelected, setIsSelected] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
   const { invalidateFirmwareById } = useInvalidateFirmware();
 
   const handleDownload = async () => {
     try {
+      setIsDownloading(true);
+      
       if (!firmware.file_url) {
         toast({
           title: "Download failed",
@@ -62,7 +65,7 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
       
       toast({
         title: "Download started",
-        description: `${firmware.name} v${firmware.version} is being downloaded.`,
+        description: `${firmware.name} v${firmware.version} is being downloaded. Burn count incremented.`,
       });
     } catch (error) {
       console.error('Download error:', error);
@@ -71,6 +74,8 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
         description: "There was an error downloading the firmware.",
         variant: "destructive",
       });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -131,9 +136,9 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
             {firmware.file_url ? (
               <div className="flex flex-col gap-4">
                 <p>This firmware file is stored in Supabase Storage.</p>
-                <Button onClick={handleDownload} className="w-full">
+                <Button onClick={handleDownload} className="w-full" disabled={isDownloading}>
                   <Download className="mr-2 h-4 w-4" />
-                  Download Firmware
+                  {isDownloading ? 'Downloading...' : 'Download Firmware'}
                 </Button>
               </div>
             ) : (
@@ -147,7 +152,7 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
           variant="ghost" 
           size="icon"
           onClick={handleDownload}
-          disabled={!firmware.file_url}
+          disabled={!firmware.file_url || isDownloading}
         >
           <Download className="h-4 w-4" />
         </Button>
