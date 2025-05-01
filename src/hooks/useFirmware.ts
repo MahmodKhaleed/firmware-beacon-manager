@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Firmware } from "@/types/firmware";
 
@@ -47,4 +47,18 @@ export const useFirmwareById = (id: string) => {
     },
     enabled: !!id,
   });
+};
+
+// Function to invalidate firmware queries after a burn count update
+export const useInvalidateFirmware = () => {
+  const queryClient = useQueryClient();
+  
+  return {
+    invalidateFirmware: () => {
+      queryClient.invalidateQueries({ queryKey: ["firmware"] });
+    },
+    invalidateFirmwareById: (id: string) => {
+      queryClient.invalidateQueries({ queryKey: ["firmware", id] });
+    }
+  };
 };

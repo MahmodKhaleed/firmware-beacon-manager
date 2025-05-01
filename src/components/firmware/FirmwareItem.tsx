@@ -6,6 +6,8 @@ import type { Firmware } from "@/types/firmware";
 import { Download, Eye, Tag } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { incrementBurnCount } from "@/utils/firmwareUtils";
+import { useInvalidateFirmware } from "@/hooks/useFirmware";
 
 interface FirmwareItemProps {
   firmware: Firmware;
@@ -15,6 +17,7 @@ interface FirmwareItemProps {
 export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProps) => {
   const [isSelected, setIsSelected] = useState(false);
   const { toast } = useToast();
+  const { invalidateFirmwareById } = useInvalidateFirmware();
 
   const handleDownload = async () => {
     try {
@@ -50,6 +53,12 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
       // Clean up
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
+      
+      // Increment burn count
+      await incrementBurnCount(firmware.id);
+      
+      // Invalidate the query to refresh data
+      invalidateFirmwareById(firmware.id);
       
       toast({
         title: "Download started",
