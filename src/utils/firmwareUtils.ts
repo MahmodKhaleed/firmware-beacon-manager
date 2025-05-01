@@ -8,14 +8,29 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const incrementBurnCount = async (firmwareId: string): Promise<void> => {
   try {
-    // Call the database function to safely increment the burn count
-    const { error } = await supabase
-      .rpc('increment_firmware_burn_count', { firmware_id: firmwareId })
-      .throwOnError();
+    // First get the current burn count
+    const { data, error: fetchError } = await supabase
+      .from('firmware')
+      .select('burn_count')
+      .eq('id', firmwareId)
+      .single();
     
-    if (error) {
-      console.error('Error incrementing burn count:', error);
-      throw error;
+    if (fetchError) {
+      console.error('Error fetching current burn count:', fetchError);
+      throw fetchError;
+    }
+    
+    const currentBurnCount = data?.burn_count || 0;
+    
+    // Then update with incremented value
+    const { error: updateError } = await supabase
+      .from('firmware')
+      .update({ burn_count: currentBurnCount + 1 })
+      .eq('id', firmwareId);
+    
+    if (updateError) {
+      console.error('Error incrementing burn count:', updateError);
+      throw updateError;
     }
   } catch (error) {
     console.error('Failed to increment burn count:', error);
