@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -10,7 +11,7 @@ export const incrementBurnCount = async (firmwareId: string): Promise<void> => {
     console.log('Calling increment_firmware_burn_count RPC with firmware ID:', firmwareId);
     
     // Use type assertion to avoid TypeScript errors with the RPC function
-    // Note: Using fw_id parameter name as per the expected function signature
+    // Note: Using fw_id parameter name instead of firmware_id as per the expected function signature
     const { data, error } = await (supabase.rpc as any)(
       'increment_firmware_burn_count', 
       { fw_id: firmwareId }

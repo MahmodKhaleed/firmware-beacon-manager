@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -5,6 +6,7 @@ import type { Firmware } from "@/types/firmware";
 import { Download, Eye, Tag } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { incrementBurnCount } from "@/utils/firmwareUtils";
 import { useInvalidateFirmware } from "@/hooks/useFirmware";
 
 interface FirmwareItemProps {
@@ -34,14 +36,10 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
       // Get the file name from the URL
       const fileName = firmware.file_url.split('/').pop() || `${firmware.name}-${firmware.version}.bin`;
       
-      // Use our new Edge Function to download the firmware and increment burn count in one go
-      const downloadUrl = `https://tsdbnoghfmqbhihkpuum.supabase.co/functions/v1/download-firmware?id=${firmware.id}`;
-      
-      // Fetch the file from our Edge Function
-      const response = await fetch(downloadUrl);
+      // Fetch the file from the storage URL
+      const response = await fetch(firmware.file_url);
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       // Get the file as a blob
@@ -65,12 +63,27 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
         description: `${firmware.name} v${firmware.version} is being downloaded.`,
       });
       
-      // Since the Edge Function increments the burn count, we just need to invalidate the query
-      invalidateFirmwareById(firmware.id);
-      console.log('Query invalidated for firmware ID:', firmware.id);
-      
-    } catch (error) {
-      console.error('Download error:', error);
+      // After successful download, try to increment burn count in a separate try-catch
+      try {
+        console.log('Incrementing burn count for firmware ID:', firmware.id);
+        await incrementBurnCount(firmware.id);
+        
+        // Invalidate the query to refresh data
+        invalidateFirmwareById(firmware.id);
+        
+        console.log('Burn count incremented successfully');
+      } catch (burnCountError) {
+        console.error('Failed to increment burn count:', burnCountError);
+        // Show a warning but don't mark the download as failed
+        toast({
+          title: "Download succeeded",
+          description: "Download completed, but burn count tracking failed.",
+          // Change from 'warning' to 'default' as 'warning' is not a valid variant
+          variant: "default",
+        });
+      }
+    } catch (downloadError) {
+      console.error('Download error:', downloadError);
       toast({
         title: "Download failed",
         description: "There was an error downloading the firmware.",
