@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -57,20 +56,32 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
       
-      console.log('Incrementing burn count for firmware ID:', firmware.id);
-      
-      // Increment burn count using our util function that calls the database function
-      await incrementBurnCount(firmware.id);
-      
-      // Invalidate the query to refresh data
-      invalidateFirmwareById(firmware.id);
-      
+      // Download successful - show success toast
       toast({
         title: "Download started",
-        description: `${firmware.name} v${firmware.version} is being downloaded. Burn count incremented.`,
+        description: `${firmware.name} v${firmware.version} is being downloaded.`,
       });
-    } catch (error) {
-      console.error('Download error:', error);
+      
+      // After successful download, try to increment burn count in a separate try-catch
+      try {
+        console.log('Incrementing burn count for firmware ID:', firmware.id);
+        await incrementBurnCount(firmware.id);
+        
+        // Invalidate the query to refresh data
+        invalidateFirmwareById(firmware.id);
+        
+        console.log('Burn count incremented successfully');
+      } catch (burnCountError) {
+        console.error('Failed to increment burn count:', burnCountError);
+        // Show a warning but don't mark the download as failed
+        toast({
+          title: "Download succeeded",
+          description: "Download completed, but burn count tracking failed.",
+          variant: "warning",
+        });
+      }
+    } catch (downloadError) {
+      console.error('Download error:', downloadError);
       toast({
         title: "Download failed",
         description: "There was an error downloading the firmware.",
