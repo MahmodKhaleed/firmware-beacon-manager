@@ -57,6 +57,8 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
       
+      console.log('Incrementing burn count for firmware ID:', firmware.id);
+      
       // Increment burn count using our util function that calls the database function
       await incrementBurnCount(firmware.id);
       
