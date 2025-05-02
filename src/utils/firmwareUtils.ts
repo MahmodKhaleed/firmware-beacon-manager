@@ -8,9 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const incrementBurnCount = async (firmwareId: string): Promise<void> => {
   try {
-    // Call the PostgreSQL function that atomically increments the burn count
+    // Using a direct update with a raw SQL expression for atomic increment
     const { error } = await supabase
-      .rpc('increment_firmware_burn_count', { firmware_id: firmwareId });
+      .from('firmware')
+      .update({ burn_count: supabase.sql('coalesce(burn_count, 0) + 1') })
+      .eq('id', firmwareId);
     
     if (error) {
       console.error('Error incrementing burn count:', error);
