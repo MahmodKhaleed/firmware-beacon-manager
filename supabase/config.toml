@@ -31,3 +31,6 @@ site_url = "http://localhost:3000"
 
 [auto-api]
 enabled = false
+
+[functions.download-firmware]
+verify_jwt = false
