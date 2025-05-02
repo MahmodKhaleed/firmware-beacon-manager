@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -77,7 +78,8 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
         toast({
           title: "Download succeeded",
           description: "Download completed, but burn count tracking failed.",
-          variant: "warning",
+          // Change from 'warning' to 'default' as 'warning' is not a valid variant
+          variant: "default",
         });
       }
     } catch (downloadError) {
