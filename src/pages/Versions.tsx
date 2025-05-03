@@ -22,10 +22,10 @@ const Versions = () => {
   if (isLoading) {
     return (
       <MainLayout>
-        <Card className="tech-gradient">
+        <Card className="bg-white">
           <CardContent className="pt-6">
             <div className="flex justify-center items-center h-64">
-              <p className="text-muted-foreground animate-pulse-slow">Loading firmware data...</p>
+              <p className="text-muted-foreground">Loading firmware data...</p>
             </div>
           </CardContent>
         </Card>
@@ -36,7 +36,7 @@ const Versions = () => {
   if (error) {
     return (
       <MainLayout>
-        <Card className="tech-gradient">
+        <Card className="bg-white">
           <CardContent className="pt-6">
             <div className="flex justify-center items-center h-64 flex-col gap-4">
               <p className="text-destructive">Error loading firmware data</p>
@@ -50,10 +50,10 @@ const Versions = () => {
 
   return (
     <MainLayout>
-      <Card className="tech-gradient border-muted">
+      <Card className="bg-white">
         <CardHeader>
           <CardTitle>Firmware Version History</CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardDescription>
             Browse and manage all firmware versions in the repository
           </CardDescription>
         </CardHeader>
@@ -77,3 +77,4 @@ const Versions = () => {
 };
 
 export default Versions;
+

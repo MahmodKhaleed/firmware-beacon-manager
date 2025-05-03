@@ -42,18 +42,17 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center space-x-3">
-          <img 
-            src="/lovable-uploads/dda1c03e-38aa-4a21-a369-a5184b1b0442.png" 
-            alt="FOTA Logo" 
-            className="h-9 w-auto"
-          />
+      <SidebarHeader className="p-4">
+        <div className="flex items-center space-x-2">
+          <div className="h-8 w-8 rounded-md bg-firmware-blue-600 text-white flex items-center justify-center text-lg font-bold">
+            F
+          </div>
+          <span className="font-semibold text-lg">FirmwareOTA</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase font-semibold tracking-wider opacity-70">Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
@@ -63,7 +62,7 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
-                      <Link to={item.url} className="flex items-center transition-colors">
+                      <Link to={item.url} className="flex items-center">
                         <item.icon className="mr-3 h-5 w-5" />
                         <span>{item.title}</span>
                       </Link>

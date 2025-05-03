@@ -13,22 +13,14 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Migration from "./pages/Migration";
 
-// Set up the query client with better default options for dark theme
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
-        <Sonner theme="dark" className="dark-toast" />
+        <Sonner />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
