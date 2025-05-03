@@ -36,6 +36,27 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
       // Get the file name from the URL
       const fileName = firmware.file_url.split('/').pop() || `${firmware.name}-${firmware.version}.bin`;
       
+      // Increment burn count BEFORE initiating file download
+      try {
+        console.log('Incrementing burn count for firmware ID:', firmware.id);
+        await incrementBurnCount(firmware.id);
+        console.log('Burn count incremented successfully');
+        
+        // Invalidate the query to refresh data - moved inside the try block
+        // so it only happens when burn count increment succeeds
+        invalidateFirmwareById(firmware.id);
+      } catch (burnCountError) {
+        // Log the error but continue with download
+        console.error('Failed to increment burn count:', burnCountError);
+        // Show a warning but don't mark the download as failed
+        toast({
+          title: "Download tracking notice",
+          description: "⚠️ Warning: Could not update download count.",
+          variant: "default",
+        });
+        // Don't return, continue with download
+      }
+      
       // Fetch the file from the storage URL
       const response = await fetch(firmware.file_url);
       if (!response.ok) {
@@ -62,26 +83,6 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
         title: "Download started",
         description: `${firmware.name} v${firmware.version} is being downloaded.`,
       });
-      
-      // After successful download, try to increment burn count in a separate try-catch
-      try {
-        console.log('Incrementing burn count for firmware ID:', firmware.id);
-        await incrementBurnCount(firmware.id);
-        
-        // Invalidate the query to refresh data
-        invalidateFirmwareById(firmware.id);
-        
-        console.log('Burn count incremented successfully');
-      } catch (burnCountError) {
-        console.error('Failed to increment burn count:', burnCountError);
-        // Show a warning but don't mark the download as failed
-        toast({
-          title: "Download succeeded",
-          description: "Download completed, but burn count tracking failed.",
-          // Change from 'warning' to 'default' as 'warning' is not a valid variant
-          variant: "default",
-        });
-      }
     } catch (downloadError) {
       console.error('Download error:', downloadError);
       toast({
