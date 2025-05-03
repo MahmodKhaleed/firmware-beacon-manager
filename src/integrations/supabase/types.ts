@@ -88,6 +88,10 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      increment_firmware_burn_count: {
+        Args: { firmware_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
