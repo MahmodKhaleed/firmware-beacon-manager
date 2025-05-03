@@ -96,7 +96,7 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
   };
 
   return (
-    <div className="grid grid-cols-12 gap-4 p-3 text-sm items-center border-t hover:bg-slate-50">
+    <div className="grid grid-cols-12 gap-4 p-4 text-sm items-center border-b border-border hover:bg-muted/30 transition-colors">
       <div className="col-span-3">
         <div className="font-medium">{firmware.name}</div>
         <div className="text-muted-foreground">{firmware.version}</div>
@@ -104,12 +104,12 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
       </div>
 
       <div className="col-span-1">
-        <div className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+        <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
           firmware.status === 'stable' 
-            ? 'bg-green-100 text-green-800' 
+            ? 'bg-green-900/50 text-green-200 border border-green-500/30' 
             : firmware.status === 'beta'
-            ? 'bg-yellow-100 text-yellow-800'
-            : 'bg-gray-100 text-gray-800'
+            ? 'bg-amber-900/50 text-amber-200 border border-amber-500/30'
+            : 'bg-gray-800 text-gray-200 border border-gray-600'
         }`}>
           {firmware.status}
         </div>
@@ -117,7 +117,7 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
 
       <div className="col-span-3 flex flex-wrap gap-1">
         {firmware.tags.map((tag, index) => (
-          <Badge key={`${tag}-${index}`} variant="outline" className="text-xs">
+          <Badge key={`${tag}-${index}`} variant="outline" className="text-xs bg-secondary/50">
             {tag}
           </Badge>
         ))}
@@ -127,24 +127,24 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
         {firmware.dateUploaded.toLocaleDateString()}
       </div>
 
-      <div className="col-span-1 text-right">
+      <div className="col-span-1 text-right font-mono text-primary">
         {firmware.burnCount}
       </div>
 
       <div className="col-span-2 flex justify-end gap-2">
         <Dialog open={isSelected} onOpenChange={setIsSelected}>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="hover:bg-secondary">
               <Eye className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl bg-card border-border">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 {firmware.name} <span className="text-muted-foreground">{firmware.version}</span>
                 <Badge variant="outline" className="ml-2">{firmware.status}</Badge>
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-muted-foreground">
                 Uploaded on {firmware.dateUploaded.toLocaleDateString()} • {firmware.size / 1024} KB • 
                 {firmware.burnCount} device burns
               </DialogDescription>
@@ -169,10 +169,11 @@ export const FirmwareItem = ({ firmware, mockFirmwareContent }: FirmwareItemProp
           size="icon"
           onClick={handleDownload}
           disabled={!firmware.file_url || isDownloading}
+          className="hover:bg-secondary"
         >
           <Download className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="hover:bg-secondary">
           <Tag className="h-4 w-4" />
         </Button>
       </div>
