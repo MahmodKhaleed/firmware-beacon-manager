@@ -12,7 +12,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Link, useLocation } from "react-router-dom"
-import { ThemeLogo } from "@/components/theme/ThemeLogo"
 
 // Menu items
 const items = [
@@ -45,7 +44,10 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-2">
-          <ThemeLogo className="h-8" />
+          <div className="h-8 w-8 rounded-md bg-firmware-blue-600 text-white flex items-center justify-center text-lg font-bold">
+            F
+          </div>
+          <span className="font-semibold text-lg">FirmwareOTA</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
