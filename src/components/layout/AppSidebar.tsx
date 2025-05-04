@@ -44,9 +44,11 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-md bg-firmware-blue-600 text-white flex items-center justify-center text-lg font-bold">
-            F
-          </div>
+          <img 
+            src="/white-fota-logo.png" 
+            alt="FOTA Logo" 
+            className="h-8 w-auto"
+          />
           <span className="font-semibold text-lg">FirmwareOTA</span>
         </div>
       </SidebarHeader>
