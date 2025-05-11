@@ -1,5 +1,5 @@
 
-import { Home, Upload, Clock, BarChart2 } from "lucide-react"
+import { Home, Upload, Clock, BarChart2, Zap } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -34,6 +34,11 @@ const items = [
     title: "Burn Statistics",
     url: "/statistics",
     icon: BarChart2,
+  },
+  {
+    title: "Burn Monitor",
+    url: "/burn-monitor",
+    icon: Zap,
   },
 ]
 

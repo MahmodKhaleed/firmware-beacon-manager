@@ -9,6 +9,91 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      burn_request_audit: {
+        Row: {
+          burn_request_id: string
+          changed_at: string
+          changed_by: string
+          id: string
+          new_status: Database["public"]["Enums"]["burn_request_status"]
+          previous_status:
+            | Database["public"]["Enums"]["burn_request_status"]
+            | null
+        }
+        Insert: {
+          burn_request_id: string
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_status: Database["public"]["Enums"]["burn_request_status"]
+          previous_status?:
+            | Database["public"]["Enums"]["burn_request_status"]
+            | null
+        }
+        Update: {
+          burn_request_id?: string
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_status?: Database["public"]["Enums"]["burn_request_status"]
+          previous_status?:
+            | Database["public"]["Enums"]["burn_request_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "burn_request_audit_burn_request_id_fkey"
+            columns: ["burn_request_id"]
+            isOneToOne: false
+            referencedRelation: "burn_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      burn_requests: {
+        Row: {
+          completed_by: string | null
+          created_at: string
+          error_message: string | null
+          firmware_id: string
+          firmware_version: string
+          id: string
+          initiated_by: string
+          status: Database["public"]["Enums"]["burn_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          completed_by?: string | null
+          created_at?: string
+          error_message?: string | null
+          firmware_id: string
+          firmware_version: string
+          id?: string
+          initiated_by: string
+          status?: Database["public"]["Enums"]["burn_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          completed_by?: string | null
+          created_at?: string
+          error_message?: string | null
+          firmware_id?: string
+          firmware_version?: string
+          id?: string
+          initiated_by?: string
+          status?: Database["public"]["Enums"]["burn_request_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "burn_requests_firmware_id_fkey"
+            columns: ["firmware_id"]
+            isOneToOne: false
+            referencedRelation: "firmware"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firmware: {
         Row: {
           burn_count: number | null
@@ -53,6 +138,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_burn_task: {
+        Args: { burner_id: string }
+        Returns: {
+          completed_by: string | null
+          created_at: string
+          error_message: string | null
+          firmware_id: string
+          firmware_version: string
+          id: string
+          initiated_by: string
+          status: Database["public"]["Enums"]["burn_request_status"]
+          updated_at: string
+        }[]
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -65,9 +164,33 @@ export type Database = {
         Args: { firmware_id: string }
         Returns: undefined
       }
+      request_firmware_burn: {
+        Args: { fw_id: string; fw_version: string; initiator: string }
+        Returns: string
+      }
+      update_burn_status: {
+        Args: {
+          request_id: string
+          new_status: Database["public"]["Enums"]["burn_request_status"]
+          burner_id: string
+          error_msg?: string
+        }
+        Returns: {
+          completed_by: string | null
+          created_at: string
+          error_message: string | null
+          firmware_id: string
+          firmware_version: string
+          id: string
+          initiated_by: string
+          status: Database["public"]["Enums"]["burn_request_status"]
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      burn_request_status: "pending" | "processing" | "completed" | "failed"
       firmware_status: "stable" | "beta" | "draft"
     }
     CompositeTypes: {
@@ -185,6 +308,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      burn_request_status: ["pending", "processing", "completed", "failed"],
       firmware_status: ["stable", "beta", "draft"],
     },
   },
