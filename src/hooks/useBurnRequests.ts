@@ -44,7 +44,7 @@ export function useBurnRequestList(
           queryClient.invalidateQueries({ queryKey: ['burnRequests'] });
           
           // If we're tracking a specific request, invalidate it as well
-          if (payload.new && payload.new.id) {
+          if (payload.new && typeof payload.new === 'object' && 'id' in payload.new) {
             queryClient.invalidateQueries({ 
               queryKey: ['burnRequest', payload.new.id] 
             });
