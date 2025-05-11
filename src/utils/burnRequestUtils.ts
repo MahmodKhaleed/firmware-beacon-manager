@@ -14,15 +14,6 @@ export type BurnRequest = {
   errorMessage: string | null;
 };
 
-export type BurnRequestAudit = {
-  id: string;
-  burnRequestId: string;
-  previousStatus: "pending" | "processing" | "completed" | "failed" | null;
-  newStatus: "pending" | "processing" | "completed" | "failed";
-  changedBy: string;
-  changedAt: Date;
-};
-
 // Convert DB row to client model
 export const mapBurnRequest = (row: any): BurnRequest => ({
   id: row.id,
@@ -34,16 +25,6 @@ export const mapBurnRequest = (row: any): BurnRequest => ({
   initiatedBy: row.initiated_by,
   completedBy: row.completed_by,
   errorMessage: row.error_message
-});
-
-// Convert DB row to client audit model
-export const mapBurnRequestAudit = (row: any): BurnRequestAudit => ({
-  id: row.id,
-  burnRequestId: row.burn_request_id,
-  previousStatus: row.previous_status,
-  newStatus: row.new_status,
-  changedBy: row.changed_by,
-  changedAt: new Date(row.changed_at)
 });
 
 // For RPi-1 (Controller) - Create a new burn request
@@ -155,23 +136,6 @@ export const getBurnRequestById = async (requestId: string): Promise<BurnRequest
   } catch (error) {
     console.error('Error getting burn request by ID:', error);
     return null;
-  }
-};
-
-// Get burn request audit history
-export const getBurnRequestHistory = async (requestId: string): Promise<BurnRequestAudit[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('burn_request_audit')
-      .select('*')
-      .eq('burn_request_id', requestId)
-      .order('changed_at', { ascending: true });
-      
-    if (error) throw error;
-    return data ? data.map(mapBurnRequestAudit) : [];
-  } catch (error) {
-    console.error('Error getting burn request history:', error);
-    return [];
   }
 };
 

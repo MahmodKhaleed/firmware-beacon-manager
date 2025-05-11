@@ -9,47 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      burn_request_audit: {
-        Row: {
-          burn_request_id: string
-          changed_at: string
-          changed_by: string
-          id: string
-          new_status: Database["public"]["Enums"]["burn_request_status"]
-          previous_status:
-            | Database["public"]["Enums"]["burn_request_status"]
-            | null
-        }
-        Insert: {
-          burn_request_id: string
-          changed_at?: string
-          changed_by: string
-          id?: string
-          new_status: Database["public"]["Enums"]["burn_request_status"]
-          previous_status?:
-            | Database["public"]["Enums"]["burn_request_status"]
-            | null
-        }
-        Update: {
-          burn_request_id?: string
-          changed_at?: string
-          changed_by?: string
-          id?: string
-          new_status?: Database["public"]["Enums"]["burn_request_status"]
-          previous_status?:
-            | Database["public"]["Enums"]["burn_request_status"]
-            | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "burn_request_audit_burn_request_id_fkey"
-            columns: ["burn_request_id"]
-            isOneToOne: false
-            referencedRelation: "burn_requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       burn_requests: {
         Row: {
           completed_by: string | null
@@ -151,10 +110,6 @@ export type Database = {
           status: Database["public"]["Enums"]["burn_request_status"]
           updated_at: string
         }[]
-      }
-      get_user_role: {
-        Args: { user_uuid: string }
-        Returns: Database["public"]["Enums"]["app_role"]
       }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }

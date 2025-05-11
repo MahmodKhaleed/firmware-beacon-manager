@@ -8,9 +8,7 @@ import {
   getBurnRequestById, 
   createBurnRequest, 
   claimBurnTask,
-  updateBurnStatus,
-  getBurnRequestHistory,
-  BurnRequestAudit
+  updateBurnStatus
 } from '@/utils/burnRequestUtils';
 
 // For RPi-1 (Controller) - List and monitor burn requests
@@ -95,17 +93,6 @@ export function useBurnRequestDetails(requestId: string | null) {
     enabled: !!requestId
   });
   
-  // Get audit history for this burn request
-  const {
-    data: burnRequestHistory,
-    isLoading: historyLoading,
-    error: historyError
-  } = useQuery({
-    queryKey: ['burnRequestHistory', requestId],
-    queryFn: () => requestId ? getBurnRequestHistory(requestId) : [],
-    enabled: !!requestId
-  });
-  
   // Listen for realtime updates to this specific burn request
   useEffect(() => {
     if (!requestId) return;
@@ -123,7 +110,6 @@ export function useBurnRequestDetails(requestId: string | null) {
         (payload) => {
           console.log(`Burn request ${requestId} updated:`, payload);
           queryClient.invalidateQueries({ queryKey: ['burnRequest', requestId] });
-          queryClient.invalidateQueries({ queryKey: ['burnRequestHistory', requestId] });
         }
       )
       .subscribe();
@@ -135,9 +121,8 @@ export function useBurnRequestDetails(requestId: string | null) {
   
   return {
     burnRequest,
-    burnRequestHistory,
-    isLoading: isLoading || historyLoading,
-    error: error || historyError,
+    isLoading,
+    error,
     refetch
   };
 }

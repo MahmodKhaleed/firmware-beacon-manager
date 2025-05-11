@@ -9,7 +9,6 @@ import Index from "./pages/Index";
 import Upload from "./pages/Upload";
 import Versions from "./pages/Versions";
 import Statistics from "./pages/Statistics";
-import BurnMonitor from "./pages/BurnMonitor";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Migration from "./pages/Migration";
@@ -29,7 +28,6 @@ const App = () => (
             <Route path="/upload" element={<Upload />} />
             <Route path="/versions" element={<Versions />} />
             <Route path="/statistics" element={<Statistics />} />
-            <Route path="/burn-monitor" element={<BurnMonitor />} />
             <Route path="/migration" element={<Migration />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
